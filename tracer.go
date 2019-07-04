@@ -2,6 +2,7 @@ package xtrace
 
 import (
 	"bytes"
+	"io"
 
 	"golang.org/x/xerrors"
 )
@@ -49,7 +50,9 @@ func (tracer *Tracer) ReadNext() (message string, err error) {
 		err = tracer.shiftErrors()
 	}()
 
-	if tracer.buffer.Len() > 0 && tracer.readBytes > 0 {
+	if tracer.nextErr == nil && tracer.buffer.Len() == 0 {
+		return "", io.EOF
+	} else if tracer.buffer.Len() > 0 && tracer.readBytes > 0 {
 		err = tracer.shiftErrors()
 		if err != nil {
 			return
@@ -64,9 +67,14 @@ func (tracer *Tracer) ReadNext() (message string, err error) {
 
 // shiftErrors will get us the nextErr and hydrate the buffer with it
 func (tracer *Tracer) shiftErrors() error {
-	message, next := generateErrorString(tracer.nextErr, tracer.detailedOutput)
+	message, next := "", error(nil)
+	if tracer.nextErr != nil {
+		message, next = generateErrorString(tracer.nextErr, tracer.detailedOutput)
+	}
+
 	tracer.nextErr = next
 	tracer.buffer.Reset()
+	tracer.readBytes = 0
 	_, err := tracer.buffer.WriteString(message)
 	if err != nil {
 		return xerrors.Errorf("can not write to error buffer: %w", err)
