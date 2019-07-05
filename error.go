@@ -70,15 +70,14 @@ func (sprinter *formatSprinter) output() string {
 
 // generateErrorString will produce the result of the given xerrors.Formatter with/without detail, as requested.
 // If the given error does not implement xerrors.Formatter, will return err.Error() instead
-func generateErrorString(err error, detail bool) (message string, next error) {
+func generateErrorString(err error, detail bool) string {
 	formatter, isFormatter := err.(xerrors.Formatter)
 	if !isFormatter {
-		return err.Error(), xerrors.Unwrap(err)
+		return err.Error()
 	}
 
 	sprinter := &formatSprinter{detail: detail}
-	next = formatter.FormatError(sprinter)
-	message = sprinter.output()
+	formatter.FormatError(sprinter)
 
-	return
+	return sprinter.output()
 }

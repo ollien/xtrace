@@ -29,11 +29,10 @@ func TestTracer_ReadNext(t *testing.T) {
 			testFunc: func(tracer Tracer) {
 				var err error
 				// Other details may be returned when we use a tracer, so we only want to assert that the expected message is at the start
-				// TODO: Maybe these should be in the other order?
 				expectedPatterns := []string{
-					`^I tried very hard and failed`,
-					`aw shucks`,
 					`^things broke :\(`,
+					`^aw shucks`,
+					`^I tried very hard and failed`,
 				}
 				for i := 0; err != io.EOF; i++ {
 					if i >= len(expectedPatterns)+1 {
