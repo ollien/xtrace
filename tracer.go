@@ -69,7 +69,12 @@ func (tracer *Tracer) ReadNext() (string, error) {
 		return "", io.EOF
 	}
 
-	return generateErrorString(tracer.popChain(), tracer.detailedOutput), nil
+	message := generateErrorString(tracer.popChain(), tracer.detailedOutput)
+	if len(message) == 0 {
+		return emptyError, nil
+	}
+
+	return message, nil
 }
 
 func (tracer *Tracer) popChain() (err error) {

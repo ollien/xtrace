@@ -67,6 +67,19 @@ func TestTracer_ReadNext(t *testing.T) {
 				assert.Equal(t, io.EOF, err)
 			},
 		},
+		test{
+			name: "empty error",
+			setup: func() Tracer {
+				err := errors.New("")
+
+				return NewTracer(err)
+			},
+			testFunc: func(tracer Tracer) {
+				message, err := tracer.ReadNext()
+				assert.Equal(t, message, emptyError)
+				assert.Nil(t, err)
+			},
+		},
 	}
 
 	for _, tt := range tests {
