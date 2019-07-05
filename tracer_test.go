@@ -12,12 +12,24 @@ import (
 	"golang.org/x/xerrors"
 )
 
-func TestTracer_ReadNext(t *testing.T) {
-	type test struct {
-		name     string
-		setup    func() Tracer
-		testFunc func(tracer Tracer)
+type test struct {
+	name     string
+	setup    func() Tracer
+	testFunc func(tracer Tracer)
+}
+
+func runTestTable(t *testing.T, table []test) {
+	for _, tt := range table {
+		passed := t.Run(tt.name, func(t *testing.T) {
+			tracer := tt.setup()
+			tt.testFunc(tracer)
+		})
+		if !passed {
+			fmt.Printf("Stage '%s' failed.", tt.name)
+		}
 	}
+}
+func TestTracer_ReadNext(t *testing.T) {
 	tests := []test{
 		test{
 			name: "two nested errors",
@@ -82,20 +94,10 @@ func TestTracer_ReadNext(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tracer := tt.setup()
-			tt.testFunc(tracer)
-		})
-	}
+	runTestTable(t, tests)
 }
 
 func TestTracer_Read(t *testing.T) {
-	type test struct {
-		name     string
-		setup    func() Tracer
-		testFunc func(tracer Tracer)
-	}
 	tests := []test{
 		test{
 			name: "no errors",
@@ -288,10 +290,5 @@ func TestTracer_Read(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tracer := tt.setup()
-			tt.testFunc(tracer)
-		})
-	}
+	runTestTable(t, tests)
 }
