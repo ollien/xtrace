@@ -42,13 +42,22 @@ func TestTracer_ReadNext(t *testing.T) {
 
 					var message string
 					message, err = tracer.ReadNext()
-					fmt.Println(message)
 					if err == nil {
 						assert.Regexp(t, expectedPatterns[i], message)
 					} else {
 						assert.Equal(t, io.EOF, err)
 					}
 				}
+			},
+		},
+		test{
+			name: "nil error",
+			setup: func() Tracer {
+				return NewTracer(nil)
+			},
+			testFunc: func(tracer Tracer) {
+				_, err := tracer.ReadNext()
+				assert.Equal(t, io.EOF, err)
 			},
 		},
 	}
