@@ -1,6 +1,7 @@
 package xtrace
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -61,6 +62,193 @@ func TestTracer_ReadNext(t *testing.T) {
 			},
 		},
 	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tracer := tt.setup()
+			tt.testFunc(tracer)
+		})
+	}
+}
+
+func TestTracer_Read(t *testing.T) {
+	type test struct {
+		name     string
+		setup    func() Tracer
+		testFunc func(tracer Tracer)
+	}
+	tests := []test{
+		test{
+			name: "no errors",
+			setup: func() Tracer {
+				return NewTracer(nil)
+			},
+			testFunc: func(tracer Tracer) {
+				buffer := make([]byte, 15)
+				n, err := tracer.Read(buffer)
+				assert.Equal(t, 0, n)
+				assert.Equal(t, err, io.EOF)
+				assert.Equal(t, make([]byte, 15), buffer)
+			},
+		},
+		test{
+			name: "one error, full read",
+			setup: func() Tracer {
+				err := errors.New("things broke :(")
+
+				return NewTracer(err)
+			},
+			testFunc: func(tracer Tracer) {
+				buffer := make([]byte, len("things broke :("))
+				n, err := tracer.Read(buffer)
+				assert.Equal(t, len(buffer), n)
+				assert.Nil(t, err)
+				assert.Equal(t, "things broke :(", string(buffer))
+
+				n, err = tracer.Read(buffer)
+				assert.Equal(t, 0, n)
+				assert.Equal(t, err, io.EOF)
+				assert.Equal(t, "things broke :(", string(buffer))
+			},
+		},
+		test{
+			name: "one error, many reads",
+			setup: func() Tracer {
+				err := errors.New("things broke :(")
+
+				return NewTracer(err)
+			},
+			testFunc: func(tracer Tracer) {
+				buffer := make([]byte, 5)
+				fullBuffer := make([]byte, 0)
+				totalN := 0
+				n, err := 0, error(nil)
+				for {
+					n, err = tracer.Read(buffer)
+					totalN += n
+					if err == io.EOF {
+						break
+					}
+
+					fullBuffer = append(fullBuffer, buffer...)
+					assert.Nil(t, err)
+					assert.True(t, func() bool {
+						return n <= len(buffer) && n > 0
+					}())
+				}
+
+				assert.Equal(t, len(fullBuffer), totalN)
+				assert.Equal(t, 0, n)
+				assert.Equal(t, "things broke :(", string(fullBuffer))
+
+				n, err = tracer.Read(buffer)
+				assert.Equal(t, n, 0)
+				assert.Equal(t, io.EOF, err)
+				assert.Equal(t, "things broke :(", string(fullBuffer))
+			},
+		},
+		test{
+			name: "many errors, one read",
+			setup: func() Tracer {
+				err := errors.New("things broke :(")
+				err2 := xerrors.Errorf("aw shucks: %w", err)
+				err3 := xerrors.Errorf("I tried very hard and failed: %w", err2)
+
+				return NewTracer(err3)
+			},
+			testFunc: func(tracer Tracer) {
+				buffer := make([]byte, len("things broke :(")*2)
+				n, err := tracer.Read(buffer)
+				assert.Equal(t, len(buffer)/2, n)
+				assert.Nil(t, err)
+				// No matter our buffer size, we only want to get the first error back
+				// Even though there are many errors, because we are only reading the first one, adn that one is just
+				// a simple error, we don't have to worry about there being contents other than the error message.
+				expectedBuffer := make([]byte, len(buffer))
+				for i, char := range "things broke :(" {
+					expectedBuffer[i] = byte(char)
+				}
+				assert.Equal(t, string(expectedBuffer), string(buffer))
+			},
+		},
+		test{
+			name: "many errors, many reads",
+			setup: func() Tracer {
+				err := errors.New("things broke :(")
+				err2 := xerrors.Errorf("aw shucks: %w", err)
+				err3 := xerrors.Errorf("I tried very hard and failed: %w", err2)
+
+				return NewTracer(err3)
+			},
+			testFunc: func(tracer Tracer) {
+				// Other details may be returned when we use a tracer, so we only want to assert that the expected message is at the start
+				expectedErrors := []string{
+					"things broke :(",
+					"aw shucks",
+					"I tried very hard and failed",
+				}
+				buffer := make([]byte, 5)
+				fullBuffer := make([]byte, 0)
+				totalN := 0
+				n, err := 0, error(nil)
+				for {
+					n, err = tracer.Read(buffer)
+					totalN += n
+					if err == io.EOF {
+						break
+					}
+
+					fullBuffer = append(fullBuffer, buffer...)
+					assert.Nil(t, err)
+					assert.True(t, func() bool {
+						return n <= len(buffer) && n > 0
+					}())
+				}
+
+				// This is a hack, but because the buffer will always be in increments of 5, we must account for the fact
+				// that the totalN may be less than it
+				assert.Equal(t, len(fullBuffer), (totalN/5+1)*5)
+				assert.Equal(t, 0, n)
+				for _, expectedError := range expectedErrors {
+					assert.Equal(t, 1, bytes.Count(fullBuffer, []byte(expectedError)))
+				}
+
+				fullBufferClone := make([]byte, len(fullBuffer))
+				copy(fullBufferClone, fullBuffer)
+				n, err = tracer.Read(buffer)
+				assert.Equal(t, n, 0)
+				assert.Equal(t, io.EOF, err)
+				assert.Equal(t, string(fullBufferClone), string(fullBuffer))
+			},
+		},
+		test{
+			name: "many errors, test error boundary",
+			setup: func() Tracer {
+				err := errors.New("things broke :(")
+				err2 := xerrors.Errorf("aw shucks: %w", err)
+
+				return NewTracer(err2)
+			},
+			testFunc: func(tracer Tracer) {
+				buffer := make([]byte, 6)
+				fullBuffer := make([]byte, 0, 18)
+				// Exhaust the buffer, and ensure we don't hit an io.EOF
+				for i := 0; i < 3; i++ {
+					n, err := tracer.Read(buffer)
+					assert.True(t, func() bool {
+						return n > 0
+					}())
+					assert.Nil(t, err)
+					for j := 0; j < n; j++ {
+						fullBuffer = append(fullBuffer, buffer[j])
+					}
+				}
+				// Ensure that we ONLY have the expected error
+				assert.Equal(t, "things broke :(", string(bytes.TrimRight(fullBuffer, "\x00")))
+			},
+		},
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tracer := tt.setup()
