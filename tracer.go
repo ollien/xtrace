@@ -7,6 +7,8 @@ import (
 	"golang.org/x/xerrors"
 )
 
+const emptyError = "<empty>"
+
 // Tracer gets the trace of an error
 type Tracer struct {
 	detailedOutput bool
@@ -22,7 +24,7 @@ func NewTracer(err error) Tracer {
 	return Tracer{
 		errorChain:     buildErrorChain(err),
 		detailedOutput: detailedOutput,
-		buffer:         nil,
+		buffer:         bytes.NewBuffer([]byte{}),
 	}
 }
 
@@ -43,14 +45,26 @@ func buildErrorChain(baseErr error) []error {
 // to be read in the error stack.
 // Returns io.EOF when there are no more errors to read.
 func (tracer *Tracer) Read(dest []byte) (n int, err error) {
-	// TODO: Implement
-	return 0, nil
+	if tracer.buffer.Len() == 0 && len(tracer.errorChain) == 0 {
+		return 0, io.EOF
+	} else if tracer.buffer.Len() == 0 {
+		message := generateErrorString(tracer.popChain(), tracer.detailedOutput)
+		// If we are passed a zero length error, returning an io.EOF is not appropriate.
+		if len(message) == 0 {
+			message = emptyError
+		}
+
+		tracer.buffer.WriteString(message)
+	}
+
+	return tracer.buffer.Read(dest)
 }
 
 // ReadNext will read one unwrapped error and its associated trace
 // If Read() has been called, but the buffer has not been exhausted, its contents will be discarded.
 // Returns io.EOF when there are no more errors to read.
 func (tracer *Tracer) ReadNext() (string, error) {
+	tracer.buffer.Reset()
 	if len(tracer.errorChain) == 0 {
 		return "", io.EOF
 	}
