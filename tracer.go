@@ -43,7 +43,7 @@ func buildErrorChain(baseErr error) []error {
 // Read implements the io.Reader interface. Will read up to len(dest) bytes of the current error.
 // Note that this means dest will only be filled up the contents of the error, regardless of if there are other errors
 // to be read in the error stack.
-// Returns io.EOF when there are no more errors to read.
+// Returns io.EOF when there are no more errors to read, but notably will not be returned when the last error is returned.
 func (tracer *Tracer) Read(dest []byte) (n int, err error) {
 	if tracer.buffer.Len() == 0 && len(tracer.errorChain) == 0 {
 		return 0, io.EOF
@@ -62,7 +62,7 @@ func (tracer *Tracer) Read(dest []byte) (n int, err error) {
 
 // ReadNext will read one unwrapped error and its associated trace
 // If Read() has been called, but the buffer has not been exhausted, its contents will be discarded.
-// Returns io.EOF when there are no more errors to read.
+// Returns io.EOF when there are no more errors to read, but notably will not be returned when the last error is returned.
 func (tracer *Tracer) ReadNext() (string, error) {
 	tracer.buffer.Reset()
 	if len(tracer.errorChain) == 0 {
