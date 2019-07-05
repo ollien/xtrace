@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -29,22 +30,27 @@ func TestTracer_ReadNext(t *testing.T) {
 			},
 			testFunc: func(tracer Tracer) {
 				var err error
-				// Other details may be returned when we use a tracer, so we only want to assert that the expected message is at the start
-				expectedPatterns := []string{
-					`^things broke :\(`,
-					`^aw shucks`,
-					`^I tried very hard and failed`,
+				expectedErrors := []string{
+					"things broke :(",
+					"aw shucks",
+					"I tried very hard and failed",
 				}
 				for i := 0; err != io.EOF; i++ {
-					if i >= len(expectedPatterns)+1 {
-						fmt.Printf("Ran more times than expected: (on attempt %d, only expected %d)", i+1, len(expectedPatterns))
+					if i >= len(expectedErrors)+1 {
+						fmt.Printf("Ran more times than expected: (on attempt %d, only expected %d)", i+1, len(expectedErrors))
 						t.FailNow()
 					}
 
 					var message string
 					message, err = tracer.ReadNext()
 					if err == nil {
-						assert.Regexp(t, expectedPatterns[i], message)
+						// Other details may be returned when we use a tracer, so we only want to assert that the expected message is at the start
+						pattern := "^" + regexp.QuoteMeta(expectedErrors[i])
+						assert.Regexp(t, pattern, message)
+						// Make sure that the next error is not contained in our current message
+						if i != len(expectedErrors)-1 {
+							assert.NotContains(t, message, expectedErrors[i+1])
+						}
 					} else {
 						assert.Equal(t, io.EOF, err)
 					}
