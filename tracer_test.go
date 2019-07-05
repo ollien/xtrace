@@ -266,6 +266,26 @@ func TestTracer_Read(t *testing.T) {
 				assert.Equal(t, "things broke :(", string(bytes.TrimRight(fullBuffer, "\x00")))
 			},
 		},
+		test{
+			name: "empty error",
+			setup: func() Tracer {
+				err := errors.New("")
+
+				return NewTracer(err)
+			},
+			testFunc: func(tracer Tracer) {
+				buffer := make([]byte, len(emptyError))
+				n, err := tracer.Read(buffer)
+				assert.Equal(t, len(buffer), n)
+				assert.Nil(t, err)
+				assert.Equal(t, emptyError, string(buffer))
+
+				n, err = tracer.Read(buffer)
+				assert.Equal(t, 0, n)
+				assert.Equal(t, err, io.EOF)
+				assert.Equal(t, emptyError, string(buffer))
+			},
+		},
 	}
 
 	for _, tt := range tests {
