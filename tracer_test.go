@@ -15,18 +15,15 @@ import (
 type test struct {
 	name     string
 	setup    func() Tracer
-	testFunc func(tracer Tracer)
+	testFunc func(t *testing.T, tracer Tracer)
 }
 
 func runTestTable(t *testing.T, table []test) {
 	for _, tt := range table {
-		passed := t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			tracer := tt.setup()
-			tt.testFunc(tracer)
+			tt.testFunc(t, tracer)
 		})
-		if !passed {
-			fmt.Printf("Stage '%s' failed.", tt.name)
-		}
 	}
 }
 func TestTracer_ReadNext(t *testing.T) {
@@ -40,7 +37,7 @@ func TestTracer_ReadNext(t *testing.T) {
 
 				return NewTracer(err3)
 			},
-			testFunc: func(tracer Tracer) {
+			testFunc: func(t *testing.T, tracer Tracer) {
 				var err error
 				expectedErrors := []string{
 					"things broke :(",
@@ -74,7 +71,7 @@ func TestTracer_ReadNext(t *testing.T) {
 			setup: func() Tracer {
 				return NewTracer(nil)
 			},
-			testFunc: func(tracer Tracer) {
+			testFunc: func(t *testing.T, tracer Tracer) {
 				_, err := tracer.ReadNext()
 				assert.Equal(t, io.EOF, err)
 			},
@@ -86,7 +83,7 @@ func TestTracer_ReadNext(t *testing.T) {
 
 				return NewTracer(err)
 			},
-			testFunc: func(tracer Tracer) {
+			testFunc: func(t *testing.T, tracer Tracer) {
 				message, err := tracer.ReadNext()
 				assert.Equal(t, message, emptyError)
 				assert.Nil(t, err)
@@ -104,7 +101,7 @@ func TestTracer_Read(t *testing.T) {
 			setup: func() Tracer {
 				return NewTracer(nil)
 			},
-			testFunc: func(tracer Tracer) {
+			testFunc: func(t *testing.T, tracer Tracer) {
 				buffer := make([]byte, 15)
 				n, err := tracer.Read(buffer)
 				assert.Equal(t, 0, n)
@@ -119,7 +116,7 @@ func TestTracer_Read(t *testing.T) {
 
 				return NewTracer(err)
 			},
-			testFunc: func(tracer Tracer) {
+			testFunc: func(t *testing.T, tracer Tracer) {
 				buffer := make([]byte, len("things broke :("))
 				n, err := tracer.Read(buffer)
 				assert.Equal(t, len(buffer), n)
@@ -139,7 +136,7 @@ func TestTracer_Read(t *testing.T) {
 
 				return NewTracer(err)
 			},
-			testFunc: func(tracer Tracer) {
+			testFunc: func(t *testing.T, tracer Tracer) {
 				buffer := make([]byte, 5)
 				fullBuffer := make([]byte, 0)
 				totalN := 0
@@ -177,7 +174,7 @@ func TestTracer_Read(t *testing.T) {
 
 				return NewTracer(err3)
 			},
-			testFunc: func(tracer Tracer) {
+			testFunc: func(t *testing.T, tracer Tracer) {
 				buffer := make([]byte, len("things broke :(")*2)
 				n, err := tracer.Read(buffer)
 				assert.Equal(t, len(buffer)/2, n)
@@ -201,7 +198,7 @@ func TestTracer_Read(t *testing.T) {
 
 				return NewTracer(err3)
 			},
-			testFunc: func(tracer Tracer) {
+			testFunc: func(t *testing.T, tracer Tracer) {
 				// Other details may be returned when we use a tracer, so we only want to assert that the expected message is at the start
 				expectedErrors := []string{
 					"things broke :(",
@@ -250,7 +247,7 @@ func TestTracer_Read(t *testing.T) {
 
 				return NewTracer(err2)
 			},
-			testFunc: func(tracer Tracer) {
+			testFunc: func(t *testing.T, tracer Tracer) {
 				buffer := make([]byte, 6)
 				fullBuffer := make([]byte, 0, 18)
 				// Exhaust the buffer, and ensure we don't hit an io.EOF
@@ -275,7 +272,7 @@ func TestTracer_Read(t *testing.T) {
 
 				return NewTracer(err)
 			},
-			testFunc: func(tracer Tracer) {
+			testFunc: func(t *testing.T, tracer Tracer) {
 				buffer := make([]byte, len(emptyError))
 				n, err := tracer.Read(buffer)
 				assert.Equal(t, len(buffer), n)
