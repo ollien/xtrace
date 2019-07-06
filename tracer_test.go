@@ -97,7 +97,6 @@ func TestTracer_ReadNext(t *testing.T) {
 			name: "empty error",
 			setup: func(t *testing.T) Tracer {
 				err := errors.New("")
-
 				tracer, constructErr := NewTracer(err)
 
 				return handleSetupError(t, tracer, constructErr)
@@ -106,6 +105,34 @@ func TestTracer_ReadNext(t *testing.T) {
 				message, err := tracer.ReadNext()
 				assert.Equal(t, message, emptyError)
 				assert.Nil(t, err)
+			},
+		},
+		test{
+			name: "reset Read",
+			setup: func(t *testing.T) Tracer {
+				err := errors.New("things broke :(")
+				err2 := xerrors.Errorf("aw shucks: %w", err)
+				err3 := xerrors.Errorf("I tried very hard and failed: %w", err2)
+				tracer, constructErr := NewTracer(err3)
+
+				return handleSetupError(t, tracer, constructErr)
+			},
+			testFunc: func(t *testing.T, tracer Tracer) {
+				buffer := make([]byte, 5)
+				n, err := tracer.Read(buffer)
+				assert.Nil(t, err)
+				assert.Equal(t, 5, n)
+				assert.Equal(t, "thing", string(buffer))
+				// Make sure the next error we read is not "things broke :("
+				message, err := tracer.ReadNext()
+				assert.Nil(t, err)
+				assert.Regexp(t, "^aw shucks", message)
+
+				// Make sure the next call to Read does not pick up where it left off
+				n, err = tracer.Read(buffer)
+				assert.Nil(t, err)
+				assert.Equal(t, 5, n)
+				assert.Equal(t, "I tri", string(buffer))
 			},
 		},
 	}
