@@ -199,7 +199,6 @@ func TestTracer_Read(t *testing.T) {
 				return NewTracer(err3)
 			},
 			testFunc: func(t *testing.T, tracer Tracer) {
-				// Other details may be returned when we use a tracer, so we only want to assert that the expected message is at the start
 				expectedErrors := []string{
 					"things broke :(",
 					"aw shucks",
