@@ -19,13 +19,21 @@ type Tracer struct {
 }
 
 // NewTracer returns a new tracer for the given error
-func NewTracer(err error) Tracer {
-	detailedOutput := true
-	return Tracer{
+func NewTracer(err error, options ...func(*Tracer) error) (Tracer, error) {
+	tracer := Tracer{
 		errorChain:     buildErrorChain(err),
-		detailedOutput: detailedOutput,
+		detailedOutput: true,
 		buffer:         bytes.NewBuffer([]byte{}),
 	}
+
+	for _, optionFunc := range options {
+		err := optionFunc(&tracer)
+		if err != nil {
+			return Tracer{}, xerrors.Errorf("Could not construct Tracer: %w", err)
+		}
+	}
+
+	return tracer, nil
 }
 
 // buildErrChain builds a slice of all of the errors with the oldest at the back of the list
