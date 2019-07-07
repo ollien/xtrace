@@ -16,6 +16,8 @@ type Tracer struct {
 	errorChain []error
 	// Holds the contents of the current error being read
 	buffer *bytes.Buffer
+	// Formats the traces returned by the Read functions
+	formatter TraceFormatter
 }
 
 // NewTracer returns a new tracer for the given error
@@ -24,6 +26,7 @@ func NewTracer(err error, options ...func(*Tracer) error) (Tracer, error) {
 		errorChain:     buildErrorChain(err),
 		detailedOutput: true,
 		buffer:         bytes.NewBuffer([]byte{}),
+		formatter:      NewLineFormatter{},
 	}
 
 	for _, optionFunc := range options {
@@ -56,7 +59,7 @@ func (tracer *Tracer) Read(dest []byte) (n int, err error) {
 	if tracer.buffer.Len() == 0 && len(tracer.errorChain) == 0 {
 		return 0, io.EOF
 	} else if tracer.buffer.Len() == 0 {
-		message := generateErrorString(tracer.popChain(), tracer.detailedOutput)
+		message := generateErrorString(tracer.popChain(), tracer.formatter, tracer.detailedOutput)
 		// If we are passed a zero length error, returning an io.EOF is not appropriate.
 		if len(message) == 0 {
 			message = emptyError
@@ -77,7 +80,7 @@ func (tracer *Tracer) ReadNext() (string, error) {
 		return "", io.EOF
 	}
 
-	message := generateErrorString(tracer.popChain(), tracer.detailedOutput)
+	message := generateErrorString(tracer.popChain(), tracer.formatter, tracer.detailedOutput)
 	if len(message) == 0 {
 		return emptyError, nil
 	}

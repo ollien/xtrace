@@ -267,16 +267,14 @@ func TestTracer_Read(t *testing.T) {
 						break
 					}
 
-					fullBuffer = append(fullBuffer, buffer...)
+					fullBuffer = append(fullBuffer, buffer[:n]...)
 					assert.Nil(t, err)
 					assert.True(t, func() bool {
 						return n <= len(buffer) && n > 0
 					}())
 				}
 
-				// This is a hack, but because the buffer will always be in increments of 5, we must account for the fact
-				// that the totalN may be less than it
-				assert.Equal(t, len(fullBuffer), (totalN/5+1)*5)
+				assert.Equal(t, len(fullBuffer), totalN)
 				assert.Equal(t, 0, n)
 				for _, expectedError := range expectedErrors {
 					assert.Equal(t, 1, bytes.Count(fullBuffer, []byte(expectedError)))

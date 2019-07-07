@@ -11,7 +11,10 @@ type TraceFormatter interface {
 	FormatTrace(previousMessages []string, message string) string
 }
 
-// NilFormatter applies no formatting and returns the given message as is
+// NilFormatter applies no formatting and returns the given message as xerrors sends them.
+// Note that the messages that xerrors sends aren't always the most intuitive (e.g. there are no newlines after error
+// messages), and the usage of this formatter is not strictly recommended. It is mainly provided for those that want
+// a simple shim.
 type NilFormatter struct{}
 
 // FormatTrace applies no formatting and returns the given message as is
