@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -69,9 +68,8 @@ func TestTracer_ReadNext(t *testing.T) {
 					var message string
 					message, err = tracer.ReadNext()
 					if err == nil {
-						// Other details may be returned when we use a tracer, so we only want to assert that the expected message is at the start
-						pattern := "^" + regexp.QuoteMeta(expectedErrors[i])
-						assert.Regexp(t, pattern, message)
+						// Other details may be returned when we use a tracer, so we only want to assert that the expected message is there
+						assert.Equal(t, 1, strings.Count(message, expectedErrors[i]))
 						// Make sure that the next error is not contained in our current message
 						if i != len(expectedErrors)-1 {
 							assert.NotContains(t, message, expectedErrors[i+1])
@@ -127,7 +125,7 @@ func TestTracer_ReadNext(t *testing.T) {
 				// Make sure the next error we read is not "things broke :("
 				message, err := tracer.ReadNext()
 				assert.Nil(t, err)
-				assert.Regexp(t, "^aw shucks", message)
+				assert.Equal(t, 1, strings.Count(message, "aw shucks"))
 
 				// Make sure the next call to Read does not pick up where it left off
 				n, err = tracer.Read(buffer)
