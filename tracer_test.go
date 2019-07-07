@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -339,4 +340,26 @@ func TestTracer_Read(t *testing.T) {
 	}
 
 	runTestTable(t, tests)
+}
+
+type capsFormatter struct{}
+
+func (formatter capsFormatter) FormatTrace(previous []string, message string) string {
+	return strings.ToUpper(message)
+}
+
+func ExampleNewTracer() {
+	baseErr := errors.New("aw shucks, something broke")
+	// capsFormatter is a custom formatter that simply applies strings.ToUpper to all messages
+	tracer, err := NewTracer(baseErr, Formatter(capsFormatter{}))
+	if err != nil {
+		panic("can not make tracer")
+	}
+	output, err := tracer.ReadNext()
+	if err != nil {
+		panic("can not read from tracer")
+	}
+
+	fmt.Println(output)
+	// Output: AW SHUCKS, SOMETHING BROKE
 }
