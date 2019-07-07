@@ -55,7 +55,7 @@ func (sprinter *formatSprinter) output() string {
 func generateErrorString(err error, traceFormatter TraceFormatter, detail bool) string {
 	formatter, isFormatter := err.(xerrors.Formatter)
 	if !isFormatter {
-		return err.Error()
+		return traceFormatter.FormatTrace(nil, err.Error())
 	}
 
 	sprinter := &formatSprinter{
