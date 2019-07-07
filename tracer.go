@@ -26,7 +26,7 @@ func NewTracer(err error, options ...func(*Tracer) error) (Tracer, error) {
 		errorChain:     buildErrorChain(err),
 		detailedOutput: true,
 		buffer:         bytes.NewBuffer([]byte{}),
-		formatter:      NewLineFormatter{},
+		formatter:      &NewLineFormatter{},
 	}
 
 	for _, optionFunc := range options {
