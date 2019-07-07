@@ -81,6 +81,44 @@ func TestTracer_ReadNext(t *testing.T) {
 			},
 		},
 		test{
+			name: "two nested errors, newest first ordering",
+			setup: func(t *testing.T) Tracer {
+				err := errors.New("things broke :(")
+				err2 := xerrors.Errorf("aw shucks: %w", err)
+				err3 := xerrors.Errorf("I tried very hard and failed: %w", err2)
+				tracer, constructErr := NewTracer(err3, Ordering(NewestFirstOrdering))
+
+				return handleSetupError(t, tracer, constructErr)
+			},
+			testFunc: func(t *testing.T, tracer Tracer) {
+				var err error
+				expectedErrors := []string{
+					"I tried very hard and failed",
+					"aw shucks",
+					"things broke :(",
+				}
+				for i := 0; err != io.EOF; i++ {
+					if i >= len(expectedErrors)+1 {
+						fmt.Printf("Ran more times than expected: (on attempt %d, only expected %d)", i+1, len(expectedErrors))
+						t.FailNow()
+					}
+
+					var message string
+					message, err = tracer.ReadNext()
+					if err == nil {
+						// Other details may be returned when we use a tracer, so we only want to assert that the expected message is there
+						assert.Equal(t, 1, strings.Count(message, expectedErrors[i]))
+						// Make sure that the next error is not contained in our current message
+						if i != len(expectedErrors)-1 {
+							assert.NotContains(t, message, expectedErrors[i+1])
+						}
+					} else {
+						assert.Equal(t, io.EOF, err)
+					}
+				}
+			},
+		},
+		test{
 			name: "nil error",
 			setup: func(t *testing.T) Tracer {
 				tracer, constructErr := NewTracer(nil)

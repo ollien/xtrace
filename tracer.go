@@ -18,6 +18,8 @@ type Tracer struct {
 	buffer *bytes.Buffer
 	// Formats the traces returned by the Read functions
 	formatter TraceFormatter
+	// Sets the order of the method
+	ordering TraceOrderingMethod
 }
 
 // NewTracer returns a new tracer for the given error
@@ -27,6 +29,7 @@ func NewTracer(err error, options ...func(*Tracer) error) (Tracer, error) {
 		detailedOutput: true,
 		buffer:         bytes.NewBuffer([]byte{}),
 		formatter:      &NewLineFormatter{},
+		ordering:       OldestFirstOrdering,
 	}
 
 	for _, optionFunc := range options {
@@ -90,8 +93,12 @@ func (tracer *Tracer) ReadNext() (string, error) {
 
 // popChain will pop the next error off the error chain
 func (tracer *Tracer) popChain() (storedError error) {
-	storedError = tracer.errorChain[len(tracer.errorChain)-1]
-	tracer.errorChain = tracer.errorChain[:len(tracer.errorChain)-1]
+	nextErrorIndex := 0
+	if tracer.ordering == OldestFirstOrdering {
+		nextErrorIndex = len(tracer.errorChain) - 1
+	}
+	storedError = tracer.errorChain[nextErrorIndex]
+	tracer.errorChain = tracer.errorChain[:nextErrorIndex]
 
 	return
 }

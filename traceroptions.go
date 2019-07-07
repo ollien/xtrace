@@ -1,5 +1,19 @@
 package xtrace
 
+import "errors"
+
+// TraceOrderingMethod represents a way to order the errors within the produced trace
+type TraceOrderingMethod int
+
+const (
+	// OldestFirstOrdering orders the trace such that the root cause of the error comes first, with all subsequent
+	// errors after it. (default)
+	OldestFirstOrdering TraceOrderingMethod = iota
+	// NewestFirstOrdering orders the trace such that the root cause of the error comes last, with all subsequent
+	// errors before it.
+	NewestFirstOrdering
+)
+
 // DetailedOutput will enable detailed output when passed to NewTracer. This detailed output is defined by the
 // xerrors.Formatter for the passed error. Defaults to true.
 func DetailedOutput(enabled bool) func(*Tracer) error {
@@ -15,6 +29,19 @@ func DetailedOutput(enabled bool) func(*Tracer) error {
 func Formatter(formatter TraceFormatter) func(*Tracer) error {
 	return func(tracer *Tracer) error {
 		tracer.formatter = formatter
+
+		return nil
+	}
+}
+
+// Ordering sets the order in which the traces will be outputted from the Read methods, when passed to NewTracer.
+func Ordering(method TraceOrderingMethod) func(*Tracer) error {
+	return func(tracer *Tracer) error {
+		if method != OldestFirstOrdering && method != NewestFirstOrdering {
+			return errors.New("invalid ordering method provided to Tracer")
+		}
+
+		tracer.ordering = method
 
 		return nil
 	}
