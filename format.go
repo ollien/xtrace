@@ -23,6 +23,32 @@ func (formatter NilFormatter) FormatTrace(previousMessages []string, message str
 	return message
 }
 
+// NestedMessageFormatter will leave the leading line with no indentation, but indents all lines following, stripping
+// whitespace from the both the left and right of each line and replacing it with a newline, unless it is the last
+// message. In this case, no newline is inserted, but whitespace is still stripped.
+type NestedMessageFormatter struct {
+	Indentation string
+}
+
+// FormatTrace formats the message as dictated by the contract for NestedMessageFormatter
+func (formatter NestedMessageFormatter) FormatTrace(previousMessages []string, message string) string {
+	formattedMessage := strings.TrimSpace(message)
+	// All messages except the first must begin with the given indentation, so if we have the first, we're done.
+	if len(previousMessages) == 0 {
+		return formattedMessage
+	}
+
+	formattedMessage = formatter.Indentation + formattedMessage
+	lastMessage := previousMessages[len(previousMessages)-1]
+	// Make sure the previous message ends with a newline
+	if lastMessage[len(lastMessage)-1] != '\n' {
+		lastMessage += "\n"
+		previousMessages[len(previousMessages)-1] = lastMessage
+	}
+
+	return formattedMessage
+}
+
 // NewLineFormatter ensures that all messages except the last end in a newline after all error content.
 type NewLineFormatter struct {
 	// Naive, if set, will instruct the formatter to perform the naive version of this algorithm, which simply
@@ -50,6 +76,7 @@ func (formatter *NewLineFormatter) FormatTrace(previousMessages []string, messag
 	return
 }
 
+// stripNewLines will strip new lines from the message using the given strategy
 func (formatter *NewLineFormatter) stripNewlines(message string) string {
 	if formatter.Naive {
 		return strings.TrimRight(message, "\n")
@@ -71,6 +98,7 @@ func (formatter *NewLineFormatter) stripNewlines(message string) string {
 	return errorPortion + strippedWhitespacePortion
 }
 
+// newLineTerminateMessages will termiante the message with a newline, based on the given strategy
 func (formatter *NewLineFormatter) newLineTerminateMessage(message string) string {
 	pattern := regexp.MustCompile(`\s*\n\s*$`)
 	// Make sure the previous message ends with a newline, or there is newline within a trailing whitespace region.
@@ -80,30 +108,4 @@ func (formatter *NewLineFormatter) newLineTerminateMessage(message string) strin
 	}
 
 	return message + "\n"
-}
-
-// NestedMessageFormatter will leave the leading line with no indentation, but indents all lines following, stripping
-// whitespace from the both the left and right of each line and replacing it with a newline, unless it is the last
-// message. In this case, no newline is inserted, but whitespace is still stripped.
-type NestedMessageFormatter struct {
-	Indentation string
-}
-
-// FormatTrace formats the message as dictated by the contract for NestedMessageFormatter
-func (formatter NestedMessageFormatter) FormatTrace(previousMessages []string, message string) string {
-	formattedMessage := strings.TrimSpace(message)
-	// All messages except the first must begin with the given indentation, so if we have the first, we're done.
-	if len(previousMessages) == 0 {
-		return formattedMessage
-	}
-
-	formattedMessage = formatter.Indentation + formattedMessage
-	lastMessage := previousMessages[len(previousMessages)-1]
-	// Make sure the previous message ends with a newline
-	if lastMessage[len(lastMessage)-1] != '\n' {
-		lastMessage += "\n"
-		previousMessages[len(previousMessages)-1] = lastMessage
-	}
-
-	return formattedMessage
 }

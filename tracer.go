@@ -88,8 +88,10 @@ func (tracer *Tracer) ReadNext() (string, error) {
 	return message, nil
 }
 
-func (tracer *Tracer) popChain() (err error) {
-	err, tracer.errorChain = tracer.errorChain[len(tracer.errorChain)-1], tracer.errorChain[:len(tracer.errorChain)-1]
+// popChain will pop the next error off the error chain
+func (tracer *Tracer) popChain() (storedError error) {
+	storedError = tracer.errorChain[len(tracer.errorChain)-1]
+	tracer.errorChain = tracer.errorChain[:len(tracer.errorChain)-1]
 
 	return
 }
