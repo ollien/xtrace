@@ -428,3 +428,16 @@ func ExampleTracer_Format() {
 	// Output: aw shucks, something broke
 	// things went wrong!
 }
+
+func ExampleOrdering() {
+	baseErr := errors.New("aw shucks, something broke")
+	err2 := xerrors.Errorf("things went wrong!: %w", baseErr)
+	tracer, err := NewTracer(err2, Ordering(NewestFirstOrdering))
+	if err != nil {
+		panic("can not make tracer")
+	}
+
+	fmt.Printf("%v", tracer)
+	// Output: things went wrong!
+	// aw shucks, something broke
+}

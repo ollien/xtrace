@@ -121,12 +121,13 @@ func (tracer *Tracer) ReadNext() (string, error) {
 
 // popChain will pop the next error off the error chain
 func (tracer *Tracer) popChain() (storedError error) {
-	nextErrorIndex := 0
 	if tracer.ordering == OldestFirstOrdering {
-		nextErrorIndex = len(tracer.errorChain) - 1
+		storedError = tracer.errorChain[len(tracer.errorChain)-1]
+		tracer.errorChain = tracer.errorChain[:len(tracer.errorChain)-1]
+	} else {
+		storedError = tracer.errorChain[0]
+		tracer.errorChain = tracer.errorChain[1:]
 	}
-	storedError = tracer.errorChain[nextErrorIndex]
-	tracer.errorChain = tracer.errorChain[:nextErrorIndex]
 
 	return
 }
