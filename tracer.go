@@ -39,13 +39,13 @@ type Tracer struct {
 }
 
 // NewTracer returns a new tracer for the given error
-func NewTracer(baseErr error, options ...func(*Tracer) error) (Tracer, error) {
+func NewTracer(baseErr error, options ...func(*Tracer) error) (*Tracer, error) {
 	formatter, err := NewNewLineFormatter(Naive(false))
 	if err != nil {
-		return Tracer{}, xerrors.Errorf("Could not construct formatter for Tracer: %w")
+		return nil, xerrors.Errorf("Could not construct formatter for Tracer: %w")
 	}
 
-	tracer := Tracer{
+	tracer := &Tracer{
 		errorChain:     buildErrorChain(baseErr),
 		detailedOutput: true,
 		buffer:         bytes.NewBuffer([]byte{}),
@@ -54,9 +54,9 @@ func NewTracer(baseErr error, options ...func(*Tracer) error) (Tracer, error) {
 	}
 
 	for _, optionFunc := range options {
-		err := optionFunc(&tracer)
+		err := optionFunc(tracer)
 		if err != nil {
-			return Tracer{}, xerrors.Errorf("Could not construct Tracer: %w", err)
+			return nil, xerrors.Errorf("Could not construct Tracer: %w", err)
 		}
 	}
 
