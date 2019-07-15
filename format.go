@@ -25,8 +25,8 @@ import (
 
 // TraceFormatter allows for the formatting of any message in the given trace
 type TraceFormatter interface {
-	// FormatTrace takes a message and will return a formatted message. Any previous message many be updated based on
-	// the contents of the passed message
+	// FormatTrace takes all previous messages and a message and will return a formatted message. Any previous message
+	// may be updated based on the current message, and the outputted trace will respect these changes.
 	FormatTrace(previousMessages []string, message string) string
 }
 

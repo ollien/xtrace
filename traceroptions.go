@@ -23,7 +23,7 @@ type TraceOrderingMethod int
 
 const (
 	// OldestFirstOrdering orders the trace such that the root cause of the error comes first, with all subsequent
-	// errors after it. (default)
+	// errors after it (default).
 	OldestFirstOrdering TraceOrderingMethod = iota
 	// NewestFirstOrdering orders the trace such that the root cause of the error comes last, with all subsequent
 	// errors before it.
