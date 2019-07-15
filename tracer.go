@@ -23,12 +23,17 @@ type Tracer struct {
 }
 
 // NewTracer returns a new tracer for the given error
-func NewTracer(err error, options ...func(*Tracer) error) (Tracer, error) {
+func NewTracer(baseErr error, options ...func(*Tracer) error) (Tracer, error) {
+	formatter, err := NewNewLineFormatter(Naive(false))
+	if err != nil {
+		return Tracer{}, xerrors.Errorf("Could not construct formatter for Tracer: %w")
+	}
+
 	tracer := Tracer{
-		errorChain:     buildErrorChain(err),
+		errorChain:     buildErrorChain(baseErr),
 		detailedOutput: true,
 		buffer:         bytes.NewBuffer([]byte{}),
-		formatter:      &NewLineFormatter{},
+		formatter:      formatter,
 		ordering:       OldestFirstOrdering,
 	}
 

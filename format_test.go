@@ -21,6 +21,18 @@ func runFormatTestTable(t *testing.T, table []formatTest) {
 	}
 }
 
+func handleFormatTestSetupError(t *testing.T, formatter TraceFormatter, err error) TraceFormatter {
+	if err != nil {
+		t.Log("Could not setup test", err)
+		t.FailNow()
+
+		// Won't ever happen after FailNow
+		return nil
+	}
+
+	return formatter
+}
+
 func TestNilFormatter(t *testing.T) {
 	tests := []formatTest{
 		formatTest{
@@ -64,7 +76,9 @@ func TestNewLineFormatter(t *testing.T) {
 		formatTest{
 			name: "one error, non-naive",
 			setup: func(t *testing.T) TraceFormatter {
-				return &NewLineFormatter{Naive: false}
+				formatter, err := NewNewLineFormatter()
+
+				return handleFormatTestSetupError(t, formatter, err)
 			},
 			testFunc: func(t *testing.T, formatter TraceFormatter) {
 				output := formatter.FormatTrace(nil, "    hello   \n")
@@ -74,7 +88,9 @@ func TestNewLineFormatter(t *testing.T) {
 		formatTest{
 			name: "one error, non-naive and mid-error newline",
 			setup: func(t *testing.T) TraceFormatter {
-				return &NewLineFormatter{Naive: false}
+				formatter, err := NewNewLineFormatter()
+
+				return handleFormatTestSetupError(t, formatter, err)
 			},
 			testFunc: func(t *testing.T, formatter TraceFormatter) {
 				output := formatter.FormatTrace(nil, "    hello\n   \n")
@@ -84,7 +100,9 @@ func TestNewLineFormatter(t *testing.T) {
 		formatTest{
 			name: "many errors, non-naive",
 			setup: func(t *testing.T) TraceFormatter {
-				return &NewLineFormatter{Naive: false}
+				formatter, err := NewNewLineFormatter()
+
+				return handleFormatTestSetupError(t, formatter, err)
 			},
 			testFunc: func(t *testing.T, formatter TraceFormatter) {
 				trace := []string{}
@@ -106,7 +124,9 @@ func TestNewLineFormatter(t *testing.T) {
 		formatTest{
 			name: "one error, naive",
 			setup: func(t *testing.T) TraceFormatter {
-				return &NewLineFormatter{Naive: true}
+				formatter, err := NewNewLineFormatter(Naive(true))
+
+				return handleFormatTestSetupError(t, formatter, err)
 			},
 			testFunc: func(t *testing.T, formatter TraceFormatter) {
 				output := formatter.FormatTrace(nil, "    hello   \n")
@@ -116,7 +136,9 @@ func TestNewLineFormatter(t *testing.T) {
 		formatTest{
 			name: "one error, naive and mid-error newline",
 			setup: func(t *testing.T) TraceFormatter {
-				return &NewLineFormatter{Naive: true}
+				formatter, err := NewNewLineFormatter(Naive(true))
+
+				return handleFormatTestSetupError(t, formatter, err)
 			},
 			testFunc: func(t *testing.T, formatter TraceFormatter) {
 				output := formatter.FormatTrace(nil, "    hello\n   ")
@@ -126,7 +148,9 @@ func TestNewLineFormatter(t *testing.T) {
 		formatTest{
 			name: "many errors, naive",
 			setup: func(t *testing.T) TraceFormatter {
-				return &NewLineFormatter{Naive: true}
+				formatter, err := NewNewLineFormatter(Naive(true))
+
+				return handleFormatTestSetupError(t, formatter, err)
 			},
 			testFunc: func(t *testing.T, formatter TraceFormatter) {
 				trace := []string{}
@@ -155,7 +179,9 @@ func TestNestedMessageFormatter(t *testing.T) {
 		formatTest{
 			name: "one error",
 			setup: func(t *testing.T) TraceFormatter {
-				return &NestedMessageFormatter{Indentation: "\t"}
+				formatter, err := NewNestedMessageFormatter(NestingIndentation("\t"))
+
+				return handleFormatTestSetupError(t, formatter, err)
 			},
 			testFunc: func(t *testing.T, formatter TraceFormatter) {
 				output := formatter.FormatTrace(nil, "    hello   \n")
@@ -165,7 +191,9 @@ func TestNestedMessageFormatter(t *testing.T) {
 		formatTest{
 			name: "many errors, non-naive",
 			setup: func(t *testing.T) TraceFormatter {
-				return &NestedMessageFormatter{Indentation: "  "}
+				formatter, err := NewNestedMessageFormatter(NestingIndentation("  "))
+
+				return handleFormatTestSetupError(t, formatter, err)
 			},
 			testFunc: func(t *testing.T, formatter TraceFormatter) {
 				trace := []string{}

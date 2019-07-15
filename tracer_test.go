@@ -140,7 +140,7 @@ func TestTracer_ReadNext(t *testing.T) {
 			},
 			testFunc: func(t *testing.T, tracer Tracer) {
 				message, err := tracer.ReadNext()
-				assert.Equal(t, message, emptyError)
+				assert.Equal(t, emptyError, message)
 				assert.Nil(t, err)
 			},
 		},
