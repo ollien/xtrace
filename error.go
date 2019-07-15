@@ -58,7 +58,7 @@ func (sprinter *formatSprinter) insertMessage(message string) {
 
 // output generates the output of a sprinter as a string. If Detail is disabled, only the first message is returned.
 func (sprinter *formatSprinter) output() string {
-	// Just return the message without a newline if we have one message
+	// Just return the message without joining
 	if len(sprinter.messages) == 1 {
 		return sprinter.messages[0]
 	}
