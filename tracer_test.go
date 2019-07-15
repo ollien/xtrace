@@ -415,3 +415,16 @@ func ExampleNewTracer() {
 	fmt.Println(output)
 	// Output: AW SHUCKS, SOMETHING BROKE
 }
+
+func ExampleTracer_Format() {
+	baseErr := errors.New("aw shucks, something broke")
+	err2 := xerrors.Errorf("things went wrong!: %w", baseErr)
+	tracer, err := NewTracer(err2)
+	if err != nil {
+		panic("can not make tracer")
+	}
+
+	fmt.Printf("%v", tracer)
+	// Output: aw shucks, something broke
+	// things went wrong!
+}

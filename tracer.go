@@ -18,6 +18,7 @@ package xtrace
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 
 	"golang.org/x/xerrors"
@@ -36,6 +37,10 @@ type Tracer struct {
 	formatter TraceFormatter
 	// Sets the order of the method
 	ordering TraceOrderingMethod
+	// baseError is the original error passed, primarily used for cloning purposes
+	baseErr error
+	// holds all of the option functions passed to the tracer, primarily used for cloning purposes
+	optionFuncs []func(*Tracer) error
 }
 
 // NewTracer returns a new tracer for the given error
@@ -51,6 +56,8 @@ func NewTracer(baseErr error, options ...func(*Tracer) error) (*Tracer, error) {
 		buffer:         bytes.NewBuffer([]byte{}),
 		formatter:      formatter,
 		ordering:       OldestFirstOrdering,
+		baseErr:        baseErr,
+		optionFuncs:    options,
 	}
 
 	for _, optionFunc := range options {
@@ -122,4 +129,44 @@ func (tracer *Tracer) popChain() (storedError error) {
 	tracer.errorChain = tracer.errorChain[:nextErrorIndex]
 
 	return
+}
+
+// Format allows for tracer to implement fmt.Formatter. This will simply make a clone of the formatter
+// and print out the full trace. DetailedOutput will be given when %+v is provided, and normal output
+// when %v is provided
+func (tracer *Tracer) Format(s fmt.State, verb rune) {
+	if verb != 'v' {
+		return
+	}
+
+	clone, err := NewTracer(tracer.baseErr, tracer.optionFuncs...)
+	if err != nil {
+		out := fmt.Sprintf("<could not print trace: %s>", err)
+		io.WriteString(s, out)
+		return
+	}
+
+	clone.detailedOutput = s.Flag('+')
+	err = nil
+	outBuffer := bytes.NewBufferString("")
+	for {
+		var out string
+		out, err = clone.ReadNext()
+		// We don't even want to attempt to write to the buffer if there's an error
+		if err != nil {
+			break
+		}
+
+		outBuffer.WriteString(out + "\n")
+	}
+
+	if err != nil && err != io.EOF {
+		out := fmt.Sprintf("<could not print trace: %s>", err)
+		io.WriteString(s, out)
+		return
+	}
+
+	// Strip out the final newline.
+	outBuffer.Truncate(outBuffer.Len() - 1)
+	io.Copy(s, outBuffer)
 }
