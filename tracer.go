@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"sync"
 
 	"golang.org/x/xerrors"
 )
@@ -41,6 +42,8 @@ type Tracer struct {
 	baseErr error
 	// holds all of the option functions passed to the tracer, primarily used for cloning purposes
 	optionFuncs []func(*Tracer) error
+	// ensures that only one read can take place at a time
+	readMux sync.Mutex
 }
 
 // NewTracer returns a new Tracer for the given error.
@@ -88,6 +91,9 @@ func buildErrorChain(baseErr error) []error {
 // Returns io.EOF when there are no more errors to read, but notably will not be returned when the last error is
 // returned.
 func (tracer *Tracer) Read(dest []byte) (n int, err error) {
+	tracer.readMux.Lock()
+	defer tracer.readMux.Unlock()
+
 	if tracer.buffer.Len() == 0 && len(tracer.errorChain) == 0 {
 		return 0, io.EOF
 	} else if tracer.buffer.Len() == 0 {
@@ -108,6 +114,9 @@ func (tracer *Tracer) Read(dest []byte) (n int, err error) {
 // Returns io.EOF when there are no more errors to read, but notably will not be returned when the last error is
 // returned.
 func (tracer *Tracer) ReadNext() (string, error) {
+	tracer.readMux.Lock()
+	defer tracer.readMux.Unlock()
+
 	tracer.buffer.Reset()
 	if len(tracer.errorChain) == 0 {
 		return "", io.EOF
