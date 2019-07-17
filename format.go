@@ -23,7 +23,7 @@ import (
 	"golang.org/x/xerrors"
 )
 
-// TraceFormatter allows for the formatting of any message in the given trace
+// TraceFormatter allows for the formatting of any message in the given trace.
 type TraceFormatter interface {
 	// FormatTrace takes all previous messages and a message and will return a formatted message. Any previous message
 	// may be updated based on the current message, and the outputted trace will respect these changes.
@@ -36,12 +36,12 @@ type TraceFormatter interface {
 // a simple shim.
 type NilFormatter struct{}
 
-// NewNilFormatter makes a new NilFormatter
+// NewNilFormatter makes a new NilFormatter.
 func NewNilFormatter() *NilFormatter {
 	return &NilFormatter{}
 }
 
-// FormatTrace applies no formatting and returns the given message as is
+// FormatTrace applies no formatting and returns the given message as is.
 func (formatter NilFormatter) FormatTrace(previousMessages []string, message string) string {
 	return message
 }
@@ -53,7 +53,7 @@ type NestedMessageFormatter struct {
 	indentation string
 }
 
-// NewNestedMessageFormatter makes a new NestedMessageFormatter
+// NewNestedMessageFormatter makes a new NestedMessageFormatter.
 func NewNestedMessageFormatter(options ...func(*NestedMessageFormatter) error) (*NestedMessageFormatter, error) {
 	formatter := &NestedMessageFormatter{indentation: "\t"}
 	for _, optionFunc := range options {
@@ -66,7 +66,7 @@ func NewNestedMessageFormatter(options ...func(*NestedMessageFormatter) error) (
 	return formatter, nil
 }
 
-// FormatTrace formats the message as dictated by the contract for NestedMessageFormatter
+// FormatTrace formats the message as dictated by the contract for NestedMessageFormatter.
 func (formatter NestedMessageFormatter) FormatTrace(previousMessages []string, message string) string {
 	formattedMessage := strings.TrimSpace(message)
 	// All messages except the first must begin with the given indentation, so if we have the first, we're done.
@@ -93,7 +93,7 @@ type NewLineFormatter struct {
 	lastRawMessage string
 }
 
-// NewNewLineFormatter will make a new NewLineFormatter
+// NewNewLineFormatter will make a new NewLineFormatter.
 func NewNewLineFormatter(options ...func(*NewLineFormatter) error) (*NewLineFormatter, error) {
 	formatter := &NewLineFormatter{naive: false}
 	for _, optionFunc := range options {
@@ -106,7 +106,7 @@ func NewNewLineFormatter(options ...func(*NewLineFormatter) error) (*NewLineForm
 	return formatter, nil
 }
 
-// FormatTrace formats the message as dictated by the contract for NewLineFormatter
+// FormatTrace formats the message as dictated by the contract for NewLineFormatter.
 func (formatter *NewLineFormatter) FormatTrace(previousMessages []string, message string) (formatted string) {
 	lastMessage := formatter.lastRawMessage
 	formatter.lastRawMessage = message
@@ -122,7 +122,7 @@ func (formatter *NewLineFormatter) FormatTrace(previousMessages []string, messag
 	return
 }
 
-// stripNewLines will strip new lines from the message using the given strategy
+// stripNewLines will strip new lines from the message using the given strategy.
 func (formatter *NewLineFormatter) stripNewlines(message string) string {
 	if formatter.naive {
 		return strings.TrimRight(message, "\n")
@@ -144,7 +144,7 @@ func (formatter *NewLineFormatter) stripNewlines(message string) string {
 	return errorPortion + strippedWhitespacePortion
 }
 
-// newLineTerminateMessages will termiante the message with a newline, based on the given strategy
+// newLineTerminateMessages will termiante the message with a newline, based on the given strategy.
 func (formatter *NewLineFormatter) newLineTerminateMessage(message string) string {
 	pattern := regexp.MustCompile(`\s*\n\s*$`)
 	// Make sure the previous message ends with a newline, or there is newline within a trailing whitespace region.

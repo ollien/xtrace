@@ -16,8 +16,8 @@
 
 /*
 Package xtrace provides the ability to generate a trace of wrapped errors from xerrors. This is facilitated through the
-Tracer type, the output of which can be customized with a Formatter. For more information on how to wrap errors, see
-https://godoc.org/golang.org/x/xerrors.
+Tracer type, the output of which can be customized with a TraceFormatter. For more information on how to wrap errors,
+see https://godoc.org/golang.org/x/xerrors.
 
 Basic Usage
 
@@ -45,7 +45,7 @@ The following example will print a trace of all of the errors that were wrapped.
 		// things went wrong!
 	}
 
-If you want more information, you can add %+v for more detailed information.
+You can also add %+v for more detailed information.
 	// ...
 	fmt.Printf("%+v", tracer)
 	// aw shucks, something broke
@@ -53,8 +53,8 @@ If you want more information, you can add %+v for more detailed information.
 	// github.com/ollien/xtrace.ExampleTracer_Format
 	//    /home/nick/Documents/code/xtrace/example.go:18
 
-Using fmt is not required of course. You can feel free to read each of the errors out one at a time with the ReadNext
-and Read functions.
+Using fmt is not required. You may instead read the errors one at a time from the trace with the ReadNext and Read
+functions.
 	// ...
 	output, err := tracer.ReadNext()
 	if err != nil {
@@ -67,8 +67,8 @@ and Read functions.
 Customization
 
 All output of a Tracer can be customized. By default, the Tracer will ensure that all messages end in a newline. If you
-want more customization than that, then you can create your own Formatter. For instance, to make all of your errors in
-all caps, you can use the following Formatter.
+want more customization than that, then you can create your own TraceFormatter.
+For instance, to make all of your errors in all caps, you can use the following TraceFormatter.
 
 	type capsFormatter struct{}
 
@@ -76,7 +76,7 @@ all caps, you can use the following Formatter.
 		return strings.ToUpper(message)
 	}
 
-You can then set a Tracer's Formatter by doing
+You can then set a Tracer's TraceFormatter like so
 	tracer, err := NewTracer(err, Formatter(capsFormatter{}))
 */
 package xtrace

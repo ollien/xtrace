@@ -26,7 +26,7 @@ import (
 
 const emptyError = "<empty>"
 
-// Tracer gets the trace of an error
+// Tracer gets the trace of errors wrapped by xerrors.
 type Tracer struct {
 	detailedOutput bool
 	// Populated with the full chain of errors, with the originating error at len(errorChain) - 1
@@ -43,7 +43,7 @@ type Tracer struct {
 	optionFuncs []func(*Tracer) error
 }
 
-// NewTracer returns a new tracer for the given error
+// NewTracer returns a new Tracer for the given error.
 func NewTracer(baseErr error, options ...func(*Tracer) error) (*Tracer, error) {
 	formatter, err := NewNewLineFormatter(Naive(false))
 	if err != nil {
@@ -70,7 +70,7 @@ func NewTracer(baseErr error, options ...func(*Tracer) error) (*Tracer, error) {
 	return tracer, nil
 }
 
-// buildErrChain builds a slice of all of the errors with the oldest at the back of the list
+// buildErrChain builds a slice of all of the errors with the oldest at the back of the list.
 func buildErrorChain(baseErr error) []error {
 	chain := []error{}
 	errCursor := baseErr
@@ -85,7 +85,8 @@ func buildErrorChain(baseErr error) []error {
 // Read implements the io.Reader interface. Will read up to len(dest) bytes of the current error.
 // Note that this means dest will only be filled up the contents of the error, regardless of if there are other errors
 // to be read in the error stack.
-// Returns io.EOF when there are no more errors to read, but notably will not be returned when the last error is returned.
+// Returns io.EOF when there are no more errors to read, but notably will not be returned when the last error is
+// returned.
 func (tracer *Tracer) Read(dest []byte) (n int, err error) {
 	if tracer.buffer.Len() == 0 && len(tracer.errorChain) == 0 {
 		return 0, io.EOF
@@ -104,7 +105,8 @@ func (tracer *Tracer) Read(dest []byte) (n int, err error) {
 
 // ReadNext will read one unwrapped error and its associated trace
 // If Read() has been called, but the buffer has not been exhausted, its contents will be discarded.
-// Returns io.EOF when there are no more errors to read, but notably will not be returned when the last error is returned.
+// Returns io.EOF when there are no more errors to read, but notably will not be returned when the last error is
+// returned.
 func (tracer *Tracer) ReadNext() (string, error) {
 	tracer.buffer.Reset()
 	if len(tracer.errorChain) == 0 {
@@ -134,7 +136,7 @@ func (tracer *Tracer) popChain() (storedError error) {
 
 // Format allows for tracer to implement fmt.Formatter. This will simply make a clone of the formatter
 // and print out the full trace. DetailedOutput will be given when %+v is provided, and normal output
-// when %v is provided
+// when %v is provided.
 func (tracer *Tracer) Format(s fmt.State, verb rune) {
 	if verb != 'v' {
 		return

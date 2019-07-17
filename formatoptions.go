@@ -29,8 +29,8 @@ func Naive(naive bool) func(*NewLineFormatter) error {
 	}
 }
 
-// NestingIndentation sets the indentation for the NestedMessageFormatter that is produced when this is passed to
-// NewNestedMessageFormatter. Defaults to "\t"
+// NestingIndentation sets the string used as indentation for the NestedMessageFormatter that is produced when this is
+// passed to NewNestedMessageFormatter. Defaults to "\t".
 func NestingIndentation(indentation string) func(*NestedMessageFormatter) error {
 	return func(formatter *NestedMessageFormatter) error {
 		formatter.indentation = indentation
