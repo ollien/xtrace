@@ -195,7 +195,7 @@ func TestNestedMessageFormatter(t *testing.T) {
 		formatTest{
 			name: "one error",
 			setup: func(t *testing.T) TraceFormatter {
-				formatter, err := NewNestedMessageFormatter(NestingIndentation("\t"))
+				formatter, err := NewNestedMessageFormatter()
 
 				return handleFormatTestSetupError(t, formatter, err)
 			},
@@ -205,7 +205,35 @@ func TestNestedMessageFormatter(t *testing.T) {
 			},
 		},
 		formatTest{
-			name: "many errors, non-naive",
+			name: "many errors",
+			setup: func(t *testing.T) TraceFormatter {
+				formatter, err := NewNestedMessageFormatter()
+
+				return handleFormatTestSetupError(t, formatter, err)
+			},
+			testFunc: func(t *testing.T, formatter TraceFormatter) {
+				trace := []string{}
+				messages := []string{
+					"things broke :(",
+					"an awful thing happened",
+					"aw shucks",
+				}
+				for i, message := range messages {
+					formattedOutput := formatter.FormatTrace(trace, message)
+					expected := message
+					if i != 0 {
+						expected = "\t" + expected
+					}
+					// Each message should be the last message at the time of insertion, so none of them should have new lines
+					assert.Equal(t, expected, formattedOutput)
+					trace = append(trace, formattedOutput)
+				}
+
+				assert.Equal(t, []string{"things broke :(\n", "\tan awful thing happened\n", "\taw shucks"}, trace)
+			},
+		},
+		formatTest{
+			name: "many errors, non-default indentation",
 			setup: func(t *testing.T) TraceFormatter {
 				formatter, err := NewNestedMessageFormatter(NestingIndentation("  "))
 

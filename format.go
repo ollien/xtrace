@@ -55,7 +55,7 @@ type NestedMessageFormatter struct {
 
 // NewNestedMessageFormatter makes a new NestedMessageFormatter
 func NewNestedMessageFormatter(options ...func(*NestedMessageFormatter) error) (*NestedMessageFormatter, error) {
-	formatter := &NestedMessageFormatter{}
+	formatter := &NestedMessageFormatter{indentation: "\t"}
 	for _, optionFunc := range options {
 		err := optionFunc(formatter)
 		if err != nil {
@@ -95,7 +95,7 @@ type NewLineFormatter struct {
 
 // NewNewLineFormatter will make a new NewLineFormatter
 func NewNewLineFormatter(options ...func(*NewLineFormatter) error) (*NewLineFormatter, error) {
-	formatter := &NewLineFormatter{}
+	formatter := &NewLineFormatter{naive: false}
 	for _, optionFunc := range options {
 		err := optionFunc(formatter)
 		if err != nil {
