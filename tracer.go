@@ -160,16 +160,20 @@ func (tracer *Tracer) Format(s fmt.State, verb rune) {
 
 	clone.detailedOutput = s.Flag('+')
 	err = nil
-	outBuffer := bytes.NewBufferString("")
+	lastOutput := ""
 	for {
 		var out string
 		out, err = clone.ReadNext()
-		// We don't even want to attempt to write to the buffer if there's an error
-		if err != nil {
+		if err != nil && err != io.EOF {
 			break
+		} else if err == io.EOF {
+			io.WriteString(s, lastOutput[:len(lastOutput)-1])
+			err = nil
+			break
+		} else {
+			io.WriteString(s, lastOutput)
+			lastOutput = out + "\n"
 		}
-
-		outBuffer.WriteString(out + "\n")
 	}
 
 	if err != nil && err != io.EOF {
@@ -177,8 +181,4 @@ func (tracer *Tracer) Format(s fmt.State, verb rune) {
 		io.WriteString(s, out)
 		return
 	}
-
-	// Strip out the final newline.
-	outBuffer.Truncate(outBuffer.Len() - 1)
-	io.Copy(s, outBuffer)
 }
