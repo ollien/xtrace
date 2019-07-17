@@ -10,28 +10,44 @@
 
 ## Basic Usage
 
+The following example will print a trace of all of the wrapped errors to stderr.
 ```go
-package main
+	package main
 
-import (
-	"errors"
+	import (
+		"errors"
 
-	"github.com/ollien/xtrace"
-	"golang.org/x/xerrors"
-)
+		"github.com/ollien/xtrace"
+		"golang.org/x/xerrors"
+	)
 
-func main() {
-	baseErr := errors.New("aw shucks, something broke")
-	err2 := xerrors.Errorf("things went wrong!: %w", baseErr)
-	tracer, err := xtrace.NewTracer(err2)
-	if err != nil {
-		panic("can not make tracer")
+	func main() {
+		baseErr := errors.New("aw shucks, something broke")
+		err2 := xerrors.Errorf("things went wrong!: %w", baseErr)
+
+		traceErr := xtrace.Trace(err2)
+		if traceErr != nil {
+			panic("can not trace")
+		}
+		// aw shucks, something broke
+		// things went wrong!
+		// github.com/ollien/xtrace.ExampleTracer_Format
+		//    /home/nick/Documents/code/xtrace/example.go:12
 	}
+```
 
-	fmt.Printf("%v", tracer)
-	// aw shucks, something broke
-	// things went wrong!
+If more customization is desired, one can use a Tracer. One of Tracer's key features is its compatibility with fmt.
+
+```go
+// ...
+tracer, err := xtrace.NewTracer(err2)
+if err != nil {
+	panic("can not make tracer")
 }
+
+fmt.Printf("%v", tracer)
+// aw shucks, something broke
+// things went wrong!
 ```
 
 That's nice, and we can see a trace of all of our errors, but xerrors provides much more for information for us. To get this information, all we have to do is change our format string to %+v.
@@ -59,6 +75,8 @@ if err != nil {
 fmt.Println(output)
 // aw shucks, something broke
 ```
+
+See the docs for more usages.
 
 ## Customization
 

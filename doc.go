@@ -21,7 +21,7 @@ see https://godoc.org/golang.org/x/xerrors.
 
 Basic Usage
 
-The following example will print a trace of all of the errors that were wrapped.
+The following example will print a trace of all of the wrapped errors to stderr.
 
 	package main
 
@@ -35,15 +35,28 @@ The following example will print a trace of all of the errors that were wrapped.
 	func main() {
 		baseErr := errors.New("aw shucks, something broke")
 		err2 := xerrors.Errorf("things went wrong!: %w", baseErr)
-		tracer, err := xtrace.NewTracer(err2)
-		if err != nil {
-			panic("can not make tracer")
-		}
 
-		fmt.Printf("%v", tracer)
+		traceErr := xtrace.Trace(err2)
+		if traceErr != nil {
+			panic("can not trace")
+		}
 		// aw shucks, something broke
 		// things went wrong!
+		// github.com/ollien/xtrace.ExampleTracer_Format
+		//    /home/nick/Documents/code/xtrace/example.go:12
 	}
+
+If more customization is desired, one can use a Tracer. One of Tracer's key features is its compatibility with fmt.
+
+	// ...
+	tracer, err := xtrace.NewTracer(err2)
+	if err != nil {
+		panic("can not make tracer")
+	}
+
+	fmt.Printf("%v", tracer)
+	// aw shucks, something broke
+	// things went wrong!
 
 You can also add %+v for more detailed information.
 	// ...
@@ -53,8 +66,9 @@ You can also add %+v for more detailed information.
 	// github.com/ollien/xtrace.ExampleTracer_Format
 	//    /home/nick/Documents/code/xtrace/example.go:18
 
-Using fmt is not required. You may instead read the errors one at a time from the trace with the ReadNext and Read
-functions.
+Using fmt is not required, though. You may instead read the errors one at a time from the trace with the ReadNext and
+Read functions.
+
 	// ...
 	output, err := tracer.ReadNext()
 	if err != nil {

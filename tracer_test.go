@@ -446,6 +446,52 @@ func TestTracer_Read(t *testing.T) {
 	runTracerTestTable(t, tests)
 }
 
+func TestTracer_Trace(t *testing.T) {
+	tests := []tracerTest{
+		tracerTest{
+			name: "one error",
+			setup: func(t *testing.T) *Tracer {
+				err := errors.New("things broke :(")
+				tracer, constructErr := NewTracer(err, DetailedOutput(false))
+
+				return handleTracerTestSetupError(t, tracer, constructErr)
+			},
+			testFunc: func(t *testing.T, tracer *Tracer) {
+				buffer := bytes.NewBufferString("")
+				err := tracer.Trace(buffer)
+				assert.Nil(t, err)
+
+				bufferString := buffer.String()
+				assert.Equal(t, "things broke :(", bufferString)
+			},
+		},
+		tracerTest{
+			name: "wrapped errors",
+			setup: func(t *testing.T) *Tracer {
+				err := errors.New("things broke :(")
+				err2 := xerrors.Errorf("aw shucks: %w", err)
+				tracer, constructErr := NewTracer(err2, DetailedOutput(false))
+
+				return handleTracerTestSetupError(t, tracer, constructErr)
+			},
+			testFunc: func(t *testing.T, tracer *Tracer) {
+				buffer := bytes.NewBufferString("")
+				err := tracer.Trace(buffer)
+				assert.Nil(t, err)
+
+				bufferString := buffer.String()
+				assert.Equal(t, 1, strings.Count(bufferString, "things broke :("), bufferString)
+				assert.Equal(t, 1, strings.Count(bufferString, "aw shucks"), bufferString)
+				assert.True(t, func() bool {
+					return strings.Index(bufferString, "things broke :(") < strings.Index(bufferString, "aw shucks")
+				}())
+			},
+		},
+	}
+
+	runTracerTestTable(t, tests)
+}
+
 type capsFormatter struct{}
 
 func (formatter capsFormatter) FormatTrace(previous []string, message string) string {

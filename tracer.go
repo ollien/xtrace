@@ -143,7 +143,7 @@ func (tracer *Tracer) popChain() (storedError error) {
 	return
 }
 
-// Format allows for tracer to implement fmt.Formatter. This will simply make a clone of the formatter
+// Format allows for tracer to implement fmt.Formatter. This will simply make a clone of the tracer
 // and print out the full trace. DetailedOutput will be given when %+v is provided, and normal output
 // when %v is provided.
 func (tracer *Tracer) Format(s fmt.State, verb rune) {
@@ -159,26 +159,47 @@ func (tracer *Tracer) Format(s fmt.State, verb rune) {
 	}
 
 	clone.detailedOutput = s.Flag('+')
-	err = nil
-	lastOutput := ""
-	for {
-		var out string
-		out, err = clone.ReadNext()
-		if err != nil && err != io.EOF {
-			break
-		} else if err == io.EOF {
-			io.WriteString(s, lastOutput[:len(lastOutput)-1])
-			err = nil
-			break
-		} else {
-			io.WriteString(s, lastOutput)
-			lastOutput = out + "\n"
-		}
-	}
-
-	if err != nil && err != io.EOF {
-		out := fmt.Sprintf("<could not print trace: %s>", err)
+	err = clone.trace(s)
+	if err != nil {
+		out := fmt.Sprintf("<%s>", err)
 		io.WriteString(s, out)
 		return
+	}
+}
+
+// Trace makes a clone of the Tracer and writes the full trace to the provided io.Writer.
+func (tracer *Tracer) Trace(writer io.Writer) error {
+	clone, err := NewTracer(tracer.baseErr, tracer.optionFuncs...)
+	if err != nil {
+		return xerrors.Errorf("failed to recreate Tracer for re-tracing: %w", err)
+	}
+
+	return clone.trace(writer)
+}
+
+// trace is identical to Trace, but does not clone the Tracer.
+func (tracer *Tracer) trace(writer io.Writer) error {
+	err := tracer.writeRemainingErrors(writer)
+	if err != nil {
+		return xerrors.Errorf("failed to write trace to writer: %w", err)
+	}
+
+	return nil
+}
+
+// writeRemainingErrors will write all errors left in the tracer to the given io.Writer
+func (tracer *Tracer) writeRemainingErrors(writer io.Writer) error {
+	lastOutput := ""
+	for {
+		out, err := tracer.ReadNext()
+		if err != nil && err != io.EOF {
+			return xerrors.Errorf("could not read trace: %w", err)
+		} else if err == io.EOF {
+			io.WriteString(writer, lastOutput[:len(lastOutput)-1])
+			return nil
+		} else {
+			io.WriteString(writer, lastOutput)
+			lastOutput = out + "\n"
+		}
 	}
 }
