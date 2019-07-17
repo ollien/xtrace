@@ -2,7 +2,11 @@
 
 [![](https://godoc.org/github.com/ollien/xtrace?status.svg)](http://godoc.org/github.com/ollien/xtrace)
 
-[xtrace](https://godoc.org/golang.org/x/xerrors) is pretty awesome. It allows you to wrap your errors and provide more context. Sadly, one of the features of it that isn't really available until Go 1.13 is the ability to print out a stack trace. No longer!
+[xerrors](https://godoc.org/golang.org/x/xerrors) is pretty awesome. It allows you to wrap your errors and provide more context. Sadly, one of the features of it that isn't really available until Go 1.13 is the ability to print out a stack trace. No longer!
+
+## Installation
+
+`go get -u github.com/ollien/xtrace`
 
 ## Basic Usage
 
@@ -58,7 +62,7 @@ func main() {
 }
 ```
 
-If you don't want to use `fmt`, and just want to get this trace as a string, you can simply use `ReadNext` to get the next error in the trace. (Tracer also implements `io.Reader` if you prefer to use that.)
+If you don't want to use `fmt` and just want to get this trace as a string, you can simply use `ReadNext` to get the next error in the trace. (Tracer also implements `io.Reader` if you prefer to use that.)
 
 ```go
 package main
@@ -90,12 +94,12 @@ func main() {
 
 ## Customization
 
-Output customization is one of the explicit goals of xtrace. For instance, if you wish to flip the output of your trace, all you have to do is the following.
+Output customization is one of the explicit goals of xtrace. For instance, if you wish to flip the output of your trace so that the newest errors are on top (i.e. with the root cause at the bottom), all you have to do is the following.
 ```go
-tracer, err := NewTracer(err2, Ordering(NewestFirstOrdering))
+tracer, err := NewTracer(err, Ordering(NewestFirstOrdering))
 ```
 
-You can also set up custom formatters for your traces. There are several included (such as NestedMessageFormatter and NilFormatter). If you want, you can also write your own formatter by simply implementing the `TraceFormatter` interface. For instance, if you wanted to make sure that _everyone_ hears your errors, you can make all of them capitalized.
+You can also set up custom formatters for your traces. There are several included (such as `NestedMessageFormatter` and `NilFormatter`). If you want, you can also write your own formatter by simply implementing the `TraceFormatter` interface. For instance, if you wanted to make sure that _everyone_ hears your errors, you can make all of them capitalized.
 
 ```go
 type capsFormatter struct{}
@@ -105,10 +109,15 @@ func (formatter capsFormatter) FormatTrace(previous []string, message string) st
 }
 ```
 
-You can then set a tracer's formatter by doing
+You can then set a Tracer's formatter by doing
 ```go
 tracer, err := NewTracer(err, Formatter(capsFormatter{}))
 ```
 
+If you wish to combine your loud errors with newest-first ordering you can pass them both as arguments to `NewTracer`.
+
+```go
+tracer, err := NewTracer(err, Ordering(NewestFirstOrdering), Formatter(capsFormatter{}))
+```
 
 See the docs for more details.
