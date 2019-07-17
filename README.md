@@ -37,59 +37,27 @@ func main() {
 That's nice, and we can see a trace of all of our errors, but xerrors provides much more for information for us. To get this information, all we have to do is change our format string to %+v.
 
 ```go
-package main
+// ... (repeated from above)
 
-import (
-	"errors"
-
-	"github.com/ollien/xtrace"
-	"golang.org/x/xerrors"
-)
-
-func main() {
-	baseErr := errors.New("aw shucks, something broke")
-	err2 := xerrors.Errorf("things went wrong!: %w", baseErr)
-	tracer, err := xtrace.NewTracer(err2)
-	if err != nil {
-		panic("can not make tracer")
-	}
-
-	fmt.Printf("%+v", tracer)
-	// aw shucks, something broke
-	// things went wrong!
-	// github.com/ollien/xtrace.ExampleTracer_Format
-	//    /home/nick/Documents/code/xtrace/example.go:18
-}
+fmt.Printf("%+v", tracer)
+// aw shucks, something broke
+// things went wrong!
+// github.com/ollien/xtrace.ExampleTracer_Format
+//    /home/nick/Documents/code/xtrace/example.go:18
 ```
 
 If you don't want to use `fmt` and just want to get this trace as a string, you can simply use `ReadNext` to get the next error in the trace. (Tracer also implements `io.Reader` if you prefer to use that.)
 
 ```go
-package main
+// ... (repeated from above)
 
-import (
-	"errors"
-
-	"github.com/ollien/xtrace"
-	"golang.org/x/xerrors"
-)
-
-func main() {
-	baseErr := errors.New("aw shucks, something broke")
-	err2 := xerrors.Errorf("things went wrong!: %w", baseErr)
-	tracer, err := xtrace.NewTracer(err2)
-	if err != nil {
-		panic("can not make tracer")
-	}
-
-	output, err := tracer.ReadNext()
-	if err != nil {
-		panic("can not read from tracer")
-	}
-
-	fmt.Println(output)
-	// aw shucks, something broke
+output, err := tracer.ReadNext()
+if err != nil {
+	panic("can not read from tracer")
 }
+
+fmt.Println(output)
+// aw shucks, something broke
 ```
 
 ## Customization
