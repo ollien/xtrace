@@ -1,6 +1,6 @@
 package xtrace
 
-/**
+/*
   Copyright 2019 Nicholas Krichevsky
 
    Licensed under the Apache License, Version 2.0 (the "License");
