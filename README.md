@@ -13,28 +13,28 @@
 
 The following example will print a trace of all of the wrapped errors to stderr.
 ```go
-	package main
+package main
 
-	import (
-		"errors"
+import (
+	"errors"
 
-		"github.com/ollien/xtrace"
-		"golang.org/x/xerrors"
-	)
+	"github.com/ollien/xtrace"
+	"golang.org/x/xerrors"
+)
 
-	func main() {
-		baseErr := errors.New("aw shucks, something broke")
-		err2 := xerrors.Errorf("things went wrong!: %w", baseErr)
+func main() {
+	baseErr := errors.New("aw shucks, something broke")
+	err2 := xerrors.Errorf("things went wrong!: %w", baseErr)
 
-		traceErr := xtrace.Trace(err2)
-		if traceErr != nil {
-			panic("can not trace")
-		}
-		// aw shucks, something broke
-		// things went wrong!
-		// github.com/ollien/xtrace.ExampleTracer_Format
-		//    /home/nick/Documents/code/xtrace/example.go:12
+	traceErr := xtrace.Trace(err2)
+	if traceErr != nil {
+		panic("can not trace")
 	}
+	// aw shucks, something broke
+	// things went wrong!
+	// github.com/ollien/xtrace.ExampleTracer_Format
+	//    /home/nick/Documents/code/xtrace/example.go:12
+}
 ```
 
 If more customization is desired, one can use a Tracer. One of Tracer's key features is its compatibility with fmt.
