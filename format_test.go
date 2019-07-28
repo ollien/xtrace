@@ -54,7 +54,7 @@ func TestNilFormatter(t *testing.T) {
 		{
 			name: "one error",
 			setup: func(t *testing.T) TraceFormatter {
-				return NilFormatter{}
+				return NewNilFormatter()
 			},
 			testFunc: func(t *testing.T, formatter TraceFormatter) {
 				output := formatter.FormatTrace(nil, "    hello   \n")
