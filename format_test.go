@@ -51,7 +51,7 @@ func handleFormatTestSetupError(t *testing.T, formatter TraceFormatter, err erro
 
 func TestNilFormatter(t *testing.T) {
 	tests := []formatTest{
-		formatTest{
+		{
 			name: "one error",
 			setup: func(t *testing.T) TraceFormatter {
 				return NilFormatter{}
@@ -61,7 +61,7 @@ func TestNilFormatter(t *testing.T) {
 				assert.Equal(t, "    hello   \n", output)
 			},
 		},
-		formatTest{
+		{
 			name: "many errors",
 			setup: func(t *testing.T) TraceFormatter {
 				return NilFormatter{}
@@ -89,7 +89,7 @@ func TestNilFormatter(t *testing.T) {
 
 func TestNewLineFormatter(t *testing.T) {
 	tests := []formatTest{
-		formatTest{
+		{
 			name: "one error, non-naive",
 			setup: func(t *testing.T) TraceFormatter {
 				formatter, err := NewNewLineFormatter()
@@ -101,7 +101,7 @@ func TestNewLineFormatter(t *testing.T) {
 				assert.Equal(t, "    hello   ", output)
 			},
 		},
-		formatTest{
+		{
 			name: "one error, non-naive and mid-error newline",
 			setup: func(t *testing.T) TraceFormatter {
 				formatter, err := NewNewLineFormatter()
@@ -113,7 +113,7 @@ func TestNewLineFormatter(t *testing.T) {
 				assert.Equal(t, "    hello   ", output)
 			},
 		},
-		formatTest{
+		{
 			name: "many errors, non-naive",
 			setup: func(t *testing.T) TraceFormatter {
 				formatter, err := NewNewLineFormatter()
@@ -137,7 +137,7 @@ func TestNewLineFormatter(t *testing.T) {
 				assert.Equal(t, []string{"things broke :(\n", "an awful thing happened\n", "aw shucks"}, trace)
 			},
 		},
-		formatTest{
+		{
 			name: "one error, naive",
 			setup: func(t *testing.T) TraceFormatter {
 				formatter, err := NewNewLineFormatter(Naive(true))
@@ -149,7 +149,7 @@ func TestNewLineFormatter(t *testing.T) {
 				assert.Equal(t, "    hello   ", output)
 			},
 		},
-		formatTest{
+		{
 			name: "one error, naive and mid-error newline",
 			setup: func(t *testing.T) TraceFormatter {
 				formatter, err := NewNewLineFormatter(Naive(true))
@@ -161,7 +161,7 @@ func TestNewLineFormatter(t *testing.T) {
 				assert.Equal(t, "    hello\n   ", output)
 			},
 		},
-		formatTest{
+		{
 			name: "many errors, naive",
 			setup: func(t *testing.T) TraceFormatter {
 				formatter, err := NewNewLineFormatter(Naive(true))
@@ -192,7 +192,7 @@ func TestNewLineFormatter(t *testing.T) {
 
 func TestNestedMessageFormatter(t *testing.T) {
 	tests := []formatTest{
-		formatTest{
+		{
 			name: "one error",
 			setup: func(t *testing.T) TraceFormatter {
 				formatter, err := NewNestedMessageFormatter()
@@ -204,7 +204,7 @@ func TestNestedMessageFormatter(t *testing.T) {
 				assert.Equal(t, "hello", output)
 			},
 		},
-		formatTest{
+		{
 			name: "many errors",
 			setup: func(t *testing.T) TraceFormatter {
 				formatter, err := NewNestedMessageFormatter()
@@ -232,7 +232,7 @@ func TestNestedMessageFormatter(t *testing.T) {
 				assert.Equal(t, []string{"things broke :(\n", "\tan awful thing happened\n", "\taw shucks"}, trace)
 			},
 		},
-		formatTest{
+		{
 			name: "many errors, non-default indentation",
 			setup: func(t *testing.T) TraceFormatter {
 				formatter, err := NewNestedMessageFormatter(NestingIndentation("  "))

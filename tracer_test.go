@@ -57,7 +57,7 @@ func handleTracerTestSetupError(t *testing.T, tracer *Tracer, err error) *Tracer
 
 func TestTracer_ReadNext(t *testing.T) {
 	tests := []tracerTest{
-		tracerTest{
+		{
 			name: "two nested errors",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")
@@ -96,7 +96,7 @@ func TestTracer_ReadNext(t *testing.T) {
 				}
 			},
 		},
-		tracerTest{
+		{
 			name: "two nested errors, newest first ordering",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")
@@ -134,7 +134,7 @@ func TestTracer_ReadNext(t *testing.T) {
 				}
 			},
 		},
-		tracerTest{
+		{
 			name: "nil error",
 			setup: func(t *testing.T) *Tracer {
 				tracer, constructErr := NewTracer(nil)
@@ -146,7 +146,7 @@ func TestTracer_ReadNext(t *testing.T) {
 				assert.Equal(t, io.EOF, err)
 			},
 		},
-		tracerTest{
+		{
 			name: "empty error",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("")
@@ -160,7 +160,7 @@ func TestTracer_ReadNext(t *testing.T) {
 				assert.Nil(t, err)
 			},
 		},
-		tracerTest{
+		{
 			name: "reset Read",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")
@@ -188,7 +188,7 @@ func TestTracer_ReadNext(t *testing.T) {
 				assert.Equal(t, "I tri", string(buffer))
 			},
 		},
-		tracerTest{
+		{
 			name: "state not reset by Format",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")
@@ -220,7 +220,7 @@ func TestTracer_ReadNext(t *testing.T) {
 
 func TestTracer_Read(t *testing.T) {
 	tests := []tracerTest{
-		tracerTest{
+		{
 			name: "no errors",
 			setup: func(t *testing.T) *Tracer {
 				tracer, constructErr := NewTracer(nil)
@@ -235,7 +235,7 @@ func TestTracer_Read(t *testing.T) {
 				assert.Equal(t, make([]byte, 15), buffer)
 			},
 		},
-		tracerTest{
+		{
 			name: "one error, full read",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")
@@ -256,7 +256,7 @@ func TestTracer_Read(t *testing.T) {
 				assert.Equal(t, "things broke :(", string(buffer))
 			},
 		},
-		tracerTest{
+		{
 			name: "one error, many reads",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")
@@ -293,7 +293,7 @@ func TestTracer_Read(t *testing.T) {
 				assert.Equal(t, "things broke :(", string(fullBuffer))
 			},
 		},
-		tracerTest{
+		{
 			name: "many errors, one read",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")
@@ -318,7 +318,7 @@ func TestTracer_Read(t *testing.T) {
 				assert.Equal(t, string(expectedBuffer), string(buffer))
 			},
 		},
-		tracerTest{
+		{
 			name: "many errors, many reads",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")
@@ -366,7 +366,7 @@ func TestTracer_Read(t *testing.T) {
 				assert.Equal(t, string(fullBufferClone), string(fullBuffer))
 			},
 		},
-		tracerTest{
+		{
 			name: "many errors, test error boundary",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")
@@ -393,7 +393,7 @@ func TestTracer_Read(t *testing.T) {
 				assert.Equal(t, "things broke :(", string(bytes.TrimRight(fullBuffer, "\x00")))
 			},
 		},
-		tracerTest{
+		{
 			name: "empty error",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("")
@@ -414,7 +414,7 @@ func TestTracer_Read(t *testing.T) {
 				assert.Equal(t, emptyError, string(buffer))
 			},
 		},
-		tracerTest{
+		{
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")
 				err2 := xerrors.Errorf("aw shucks: %w", err)
@@ -448,7 +448,7 @@ func TestTracer_Read(t *testing.T) {
 
 func TestTracer_Trace(t *testing.T) {
 	tests := []tracerTest{
-		tracerTest{
+		{
 			name: "one error",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")
@@ -465,7 +465,7 @@ func TestTracer_Trace(t *testing.T) {
 				assert.Equal(t, "things broke :(", bufferString)
 			},
 		},
-		tracerTest{
+		{
 			name: "wrapped errors",
 			setup: func(t *testing.T) *Tracer {
 				err := errors.New("things broke :(")

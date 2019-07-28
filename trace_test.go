@@ -41,7 +41,7 @@ func runTraceTestTable(t *testing.T, table []traceTest) {
 
 func TestTrace(t *testing.T) {
 	tests := []traceTest{
-		traceTest{
+		{
 			name: "basic error",
 			testFunc: func(t *testing.T) {
 				buffer := bytes.NewBufferString("")
@@ -51,7 +51,7 @@ func TestTrace(t *testing.T) {
 				assert.Equal(t, err.Error()+"\n", buffer.String())
 			},
 		},
-		traceTest{
+		{
 			name: "wrapped errors",
 			testFunc: func(t *testing.T) {
 				buffer := bytes.NewBufferString("")
