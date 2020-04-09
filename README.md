@@ -108,3 +108,35 @@ tracer, err := NewTracer(err, Ordering(NewestFirstOrdering), Formatter(capsForma
 ```
 
 See the docs for more details.
+
+
+# A note about Go 1.13+
+
+This package _does_ work on Go 1.13+ with the new `errors` package. However, the solidified version of the new errors does not include the `Formatter` interface that `xerrors` did. While it is still possible for this package to work without it, the traces will contain the full contents of the error, including the wrapped content and notably, line numbers do not work. For instance
+```go
+package main
+
+import (
+	"fmt"
+	"errors"
+
+	"github.com/ollien/xtrace"
+)
+
+func main() {
+	baseErr := errors.New("aw shucks, something broke")
+	err2 := fmt.Errorf("things went wrong!: %w", baseErr)
+
+	traceErr := xtrace.Trace(err2)
+	if traceErr != nil {
+		panic("can not trace")
+	}
+	// aw shucks, something broke
+	// things went wrong!: aw shucks, something broke
+}
+
+```
+
+This makes the traces a bit redundant, and a bit more useless as they do not contain line numbers. This is certainly unfortunate, as one of the design goals of this package was to not need to use this package to wrap your errors, much like https://github.com/pkg/errors.
+
+Again, this package will still work with the new `errors` package, but it cannot work as it once was intended to. A shame, truly. You can always still use `xerrors` if you're so inclined, though.
